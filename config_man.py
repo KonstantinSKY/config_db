@@ -86,7 +86,7 @@ class ConfigMan(BDB):
         self.DB.close()
         exit()
 
-    
+
     def menu(self):
 
         print("=" * 100)
