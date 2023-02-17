@@ -71,6 +71,11 @@ class ConfigMan(BDB):
         print(config[name])
         self.add_db(config)
 
+    def fill(self):
+        print("Filling config thru template")
+        print(self.sub_config)
+
+
     def delete(self, key):
         pass
     def show(self):
@@ -96,8 +101,8 @@ class ConfigMan(BDB):
                     "F": {"cmd": self.fill, "descr": "Fill one"},
                     "D": {"cmd": self.delete, "descr": "Delete one"},
                     "S": {"cmd": self.show, "descr": "Show element"},
-                    "B": {"cmd": "back", "descr": f"Back to "},
-                    "E": {"cmd": "exit", "descr": "Exit program"}
+                    "B": {"cmd": self.back, "descr": f"Back to "},
+                    "E": {"cmd": self.exit, "descr": "Exit program"}
                     }
         # Print act menu
         act_menu = []
@@ -105,6 +110,9 @@ class ConfigMan(BDB):
             letter = list(act_key)[0]
             if (letter == "B" or letter == "D") and len(self.cursor) <= 1:
                 continue
+            if letter == "F" and "_template" not in self.sub_config:
+                continue
+
             act_menu.append(letter)
             print(f"[ {letter} ] - {act_keys[act_key]['descr']}")
         print("=" * 100)
