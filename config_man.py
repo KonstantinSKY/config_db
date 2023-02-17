@@ -40,8 +40,6 @@ class ConfigMan(BDB):
                     "3": {"cmd": {}, "descr": "{} Dictionary or hash"}
                     }
 
-
-
     def sub_menu(self, variants):
         for key, val in variants.items():
             print(f"[{key}] - {val['descr']}")
@@ -51,8 +49,7 @@ class ConfigMan(BDB):
             print("Incorrect select! Please try one more time.")
             self.sub_menu(variants)
         else:
-             return variants[select]
-
+            return variants[select]
 
         print("Select structure type:")
 
@@ -72,9 +69,9 @@ class ConfigMan(BDB):
         name = input("Input config name : ")
         print("You can load config template from config file")
 
-        if yes_or_no(f"Do your want to create {name} element from config file?"):
-            self.empty()
-            self.add_db(config)
+        # if yes_or_no(f"Do your want to create {name} element from config file?"):
+        #     self.empty()
+        #     self.add_db(self.config)
 
         print("config json structure inside the file must have the same name like config:", name)
         file_name = input("Input config structure template .py file: ")
@@ -146,50 +143,30 @@ class ConfigMan(BDB):
                     "E": {"cmd": self.exit, "descr": "Exit program"}
                     }
         for key, val in act_keys.items():
-            print(key, val)
             if (key == "B" or key == "D") and len(self.cursor) <= 1:
                 act_keys[key]["hide"] = True
-                print(act_keys)
                 continue
             if key == "F" and "_template" not in self.sub_config:
-                act_keys[key]["hide"] = True
+                act_keys[key]['hide'] = True
                 continue
 
         self.main_menu.add_obj(act_keys)
-        #self.main_menu.activate()
+        # Additional dynamic menu
+        addition_menu = {}
 
-        # Print menu
-        menu_list = []
-        print(self.configs)
+        for idx, key in enumerate(self.sub_config.keys()):
+            if isinstance(self.sub_config[key], list) or isinstance(self.sub_config[key], dict):
+                addition_menu[str(idx)] = {"descr": str(key)}
 
-        for idx, val in enumerate(self.sub_config.keys()):
-            print(idx,val )
-            if isinstance(val, list) or isinstance(val, dict):
-                menu_list.append(key)
-        exit()
-        # for idx, item in enumerate(menu_list):
-        #     print(f"[ {idx} ] - {item}")
+        self.main_menu.add_obj(addition_menu)
+        select = self.main_menu.activate()
+        if "cmd" in select and callable(select["cmd"]):
+            select["cmd"]()
+        else:
+            self.cursor.append(select['descr'])
 
-        # print("=" * 100)
-        # select = input("Enter your select:")
-
-        if select.isdigit() and select.isnumeric():
-            if int(select) not in range(0, len(menu_list)):
-                print("Incorrect select! Please try one more time.")
-            else:
-                self.cursor.append(menu_list[int(select)])
-                self.get_sub_config()
-            return self.menu()
-
-        select = select.upper()
-        if select not in act_menu:
-            print("Incorrect select! Please try one more time.")
-            return self.menu()
-
-        act_keys[select]["cmd"]()
-        # cmd = "self. " + act_keys[select]["cmd"] + "()"
-        # eval(cmd)
-
+        self.main_menu.clear()
+        self.get_sub_config()
         return self.menu()
 
     def __delete__(self, instance):
