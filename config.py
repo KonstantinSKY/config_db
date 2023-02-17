@@ -1,22 +1,22 @@
-STRUCTURE = {
-    "URL": "",
-    "OBJECT": {
-        "_object_name": [
-            {
-                'by': '',
-                'attr': '',
-                'many': '',
-                'position': '',
-            }]
+PAGES = {
+    "_name": {
+        "URL": "",
+        "OBJECT": {
+            "_object name": [
+                {
+                    'by': '',
+                    'attr': '',
+                    'many': '',
+                    'position': '',
+                }]
+        },
+        "ACTIONS": {
+            "_action name": [
+                {
+                    'obj': '',
+                    'cmd': '',
+                    'data': '',
+                }]
+        },
     },
-    "ACTIONS": {
-        "_actions_name": [
-            {
-                'obj': '',
-                'cmd': '',
-                'data': '',
-            }
-        ]
-    },
-
 }
