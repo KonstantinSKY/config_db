@@ -5,6 +5,7 @@ class DynMenu:
         self.name = name
         self.objects = [] if objects is None else objects
         self.description = ""
+        self.active_positions = {}
         self.selected = None
 
     def add_obj(self, obj):
@@ -12,6 +13,7 @@ class DynMenu:
 
     def clear(self):
         self.objects = []
+        self.active_positions = {}
         self.selected = None
 
     def activate(self):
@@ -23,22 +25,18 @@ class DynMenu:
         for menu_obj in self.objects:
             if isinstance(menu_obj, dict):
                 self.print_dict(menu_obj)
-            print("=" * 100)
-        if not self.select_position():
-            print("Incorrect select! Please try one more time.")
-            return self.activate()
+            print("-" * 100)
+
+        self.select_position()
         return self.selected
 
     def select_position(self):
         select = input("Enter your select:").upper()
-        for menu_obj in self.objects:
-            print(menu_obj)
-            if select not in menu_obj:
-                continue
-            self.selected = menu_obj[select]
-            self.selected["key"] = select
-            return True
-        return False
+        if select not in self.active_positions:
+            print("Incorrect select! Please try one more time.")
+            return self.select_position()
+        self.selected = self.active_positions[select]
+        self.selected["key"] = select
 
     def print_dict(self, obj):
         for key, val in obj.items():
@@ -47,8 +45,8 @@ class DynMenu:
                 continue
             if "hide" in val and val["hide"]:
                 continue
+            self.active_positions[str(key)] = val
             print(f"[ {key} ] - {val['descr'] if 'descr' in val else ''}")
-
 
 if __name__ == '__main__':
     act_keys = {
@@ -56,7 +54,7 @@ if __name__ == '__main__':
         "F": {"cmd": "fill", "descr": "Fill one"},
         "D": {"cmd": "delete", "descr": "Delete one"},
         "S": {"cmd": "self.show", "descr": "Show element"},
-        "dev": "=" * 100,
+        "dev": "-" * 100,
         "B": {"cmd": "self.back", "descr": f"Back to "},
         "E": {"cmd": "self.exit", "descr": "Exit program"},
 
