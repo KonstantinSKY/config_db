@@ -34,11 +34,6 @@ class ConfigMan(BDB):
             self.sub_config = self.sub_config[key]
         print(self.sub_config)
 
-    def select_type(self):
-        variants = {"1": {"cmd": "", "descr": "String"},
-                    "2": {"cmd": [], "descr": "[] List or Array"},
-                    "3": {"cmd": {}, "descr": "{} Dictionary or hash"}
-                    }
 
     def sub_menu(self, variants):
         for key, val in variants.items():
@@ -65,17 +60,23 @@ class ConfigMan(BDB):
             self.reinit()
 
     def create_config(self):
-        print("Creating config ...")
+        print("Creating NEW config ...")
         name = input("Input config name : ")
+        config = {name: {}}
         print("You can load config template from config file")
+        if yes_or_no(f"Do your want to create {name} element from config file?"):
+            pass
+        else:
+            self.select_type()
 
-        # if yes_or_no(f"Do your want to create {name} element from config file?"):
-        #     self.empty()
-        #     self.add_db(self.config)
+        self.add_db(config)
+        self.cursor = [self.root, name]
+        return
+            #self.empty()
+            #self.add_db(self.config)
 
         print("config json structure inside the file must have the same name like config:", name)
         file_name = input("Input config structure template .py file: ")
-        config = {name: {}}
         if not file_name or not os.path.isfile(file_name):
             print("Wrong file name:", file_name)
             if yes_or_no("Do your want to create config without template with empty {} and to add it to DB?"):
@@ -101,6 +102,19 @@ class ConfigMan(BDB):
         config[name]["_template"] = getattr(module, name)
         print(config[name])
         self.add_db(config)
+
+    def select_type(self):
+        type_menu_keys = {
+            "D": {"cmd": {}, "descr": "{dict} - Dictionary or hash"},
+            "L": {"cmd": [], "descr": "[list -  List or array"},
+            "S": {"cmd": "", "descr": "{dict} - String"},
+            }
+        type_menu = DynMenu("MENU - type of config element  ")
+
+        type_menu.add_obj(type_menu_keys)
+        print(type_menu.activate()["cmd"])
+
+
 
     def fill(self):
         print("Filling config thru template")
@@ -175,6 +189,6 @@ class ConfigMan(BDB):
 
 if __name__ == '__main__':
     CM = ConfigMan("config_d.db")
-    CM.DB.put("main3".encode(), json.dumps({"sada34{}": {"gssdsdsdsd": "hjhjskl;sk"}}).encode())
-    print(CM.configs)
+    #CM.DB.put("main3".encode(), json.dumps({"sada34{}": {"gssdsdsdsd": "hjhjskl;sk"}}).encode())
+    #print(CM.configs)
     CM.menu()
