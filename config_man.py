@@ -34,7 +34,6 @@ class ConfigMan(BDB):
             self.sub_config = self.sub_config[key]
         print(self.sub_config)
 
-
     def sub_menu(self, variants):
         for key, val in variants.items():
             print(f"[{key}] - {val['descr']}")
@@ -48,57 +47,90 @@ class ConfigMan(BDB):
 
         print("Select structure type:")
 
-    def empty(self):
-        print("Select type structure of your config"
+    # def create(self):
+    #     print("Create function")
+    #     if self.cursor[-1] == self.root:
+    #         self.create_config()
+    #         self.reinit()
+    def enter_name(self):
+        return input(f"Input NEW {self.cursor[-1:][0].rstrip('s')} name : ")
 
-              )
+    def enter_name_clear(self):
+        self.add_db({self.enter_name(): self.select_type()})
+
+    def enter_name_templ(self):
+        self.add_db({self.enter_name(): self.add_template()})
+
+    def enter_name_templ(self):
+        pass
+
+    def update_name(self):
+        pass
 
     def create(self):
-        print("Create function")
-        if self.cursor[-1] == self.root:
-            self.create_config()
-            self.reinit()
+        parent = self.cursor[-1:][0]
+        print("Creating NEW", parent)
+        # name = input(f"Input NEW {parent} name : ")
 
-    def create_config(self):
-        print("Creating NEW config ...")
-        name = input("Input config name : ")
-        config = {name: {}}
+        create_menu_keys = {
+            "NC": {"cmd": self.enter_name_clear, "descr": "Enter New Name (or Key) + Clear object"},
+            "NT": {"cmd": self.enter_name_templ, "descr": "Enter New Name (or Key) + Template object"},
+            "U": {"cmd": self.update_name, "descr": "Update template name and add template part to fill"},
+            "T": {"cmd": self.add_template, "descr": "Create from Template"},
+            "C": {"cmd": self.select_type, "descr": "Create from Clear structure"},
+            "B": {"cmd": self.back, "descr": "Back to previous menu"},
+        }
+
+        create_menu = DynMenu("MENU - Creating new config")
+        create_menu.add_obj(create_menu_keys)
+        create_menu.activate()["cmd"]()
+        return
         print("You can load config template from config file")
         if yes_or_no(f"Do your want to create {name} element from config file?"):
-            pass
+            self.add_template(self, name)
         else:
-            self.select_type()
+            self.add_db({name: self.select_type()})
 
-        self.add_db(config)
+        # self.add_db(config)
         self.cursor = [self.root, name]
         return
-            #self.empty()
-            #self.add_db(self.config)
+        # self.empty()
+        # self.add_db(self.config)
 
+    def get_file(self):
+        pass
+
+    # import os
+    #
+    # for x in os.listdir():
+    #     if x.endswith(".txt"):
+    #         # Prints only text file present in My Folder
+    #         print(x)
+
+
+
+    def add_template(self, name):
         print("config json structure inside the file must have the same name like config:", name)
         file_name = input("Input config structure template .py file: ")
         if not file_name or not os.path.isfile(file_name):
             print("Wrong file name:", file_name)
-            if yes_or_no("Do your want to create config without template with empty {} and to add it to DB?"):
-                self.add_db(config)
-            return
+            return self.create_config()
+
+        self.get_file()
+        # read json config template
 
         module = importlib.import_module(file_name.rstrip(".py"))
         if not hasattr(module, name):
             print("The config file does not contain root structure: ", name)
             print(module.__dir__())
-            if yes_or_no("Do your want to create config without template with empty {} and to add it to DB?"):
-                self.add_db(config)
-            return
+            return self.create_config()
 
-        print(config)
-        print(getattr(module, name))
-        # config[name] = {"template": module.name}
         print("New template for :", name)
         obj = getattr(module, name)
         print(json.dumps(obj, indent=4)) if isinstance(obj, dict) or isinstance(obj, list) else obj
-        if not yes_or_no("Do your want to create config with template and add it to DB?"):
+        if not yes_or_no("Do your want to create config with template and add this structure  to DB?"):
             return
+
         config[name]["_template"] = getattr(module, name)
         print(config[name])
         self.add_db(config)
@@ -108,30 +140,18 @@ class ConfigMan(BDB):
             "D": {"cmd": {}, "descr": "{dict} - Dictionary or hash"},
             "L": {"cmd": [], "descr": "[list -  List or array"},
             "S": {"cmd": "", "descr": "{dict} - String"},
-            }
+            "I": {"cmd": int(), "descr": "int() = 0 - Integer number"},
+            "F": {"cmd": float(), "descr": "float() = 0.0 - Float number"},
+        }
         type_menu = DynMenu("MENU - type of config element  ")
 
         type_menu.add_obj(type_menu_keys)
-        print(type_menu.activate()["cmd"])
-
-
-
-    def fill(self):
-        print("Filling config thru template")
-        print(self.sub_config)
-        template = self.sub_config["_template"]
-        print("template", template)
-        if isinstance(template, dict):
-            for key, val in template.items():
-                print(key[0])
-                if key[0] == "_":
-                    sub_name = key[1:]
-                    print(sub_name)
-                    key_name = input("Enter ", sub_name)
-
-        # if isinstance(template, list):
+        return type_menu.activate()["cmd"]
 
     def delete(self, key):
+        pass
+
+    def fill(self):
         pass
 
     def show(self):
@@ -188,7 +208,8 @@ class ConfigMan(BDB):
 
 
 if __name__ == '__main__':
+    print(DynMenu("test").__dir__())
     CM = ConfigMan("config_d.db")
-    #CM.DB.put("main3".encode(), json.dumps({"sada34{}": {"gssdsdsdsd": "hjhjskl;sk"}}).encode())
-    #print(CM.configs)
+    # CM.DB.put("main3".encode(), json.dumps({"sada34{}": {"gssdsdsdsd": "hjhjskl;sk"}}).encode())
+    # print(CM.configs)
     CM.menu()
