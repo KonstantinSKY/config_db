@@ -13,6 +13,7 @@ class BDB:
     @staticmethod
     def bin_to(_bin):
         obj = _bin.decode()
+        print("obj", obj)
         try:
             obj = json.loads(obj)
         except ValueError:
@@ -29,13 +30,14 @@ class BDB:
             val = self.bin_to(record[1])
             obj[key] = val
             record = self.curDB.next()
+        print("objdd", obj)
         return obj
 
     @staticmethod
     def to_bin(obj):
-        if isinstance(obj, dict) or isinstance(obj, list):
+        if not isinstance(obj, str):
+        #if isinstance(obj, dict) or isinstance(obj, list) or isinstance(obj, int):
             obj = json.dumps(obj)
-
         return obj.encode()
 
     def add_db(self, record: dict):
