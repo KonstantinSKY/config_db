@@ -14,21 +14,14 @@ class ConfigMan(BDB):
         s.configs = {s.root: s.read_all_db()}
         s.sub_config = s.configs[s.root]
         s.cursor = list(s.configs.keys())
-        # s.reinit()
         s.main_menu = DynMenu("MENU")
-
-    # def reinit(s):
-    #     s.configs = {s.root: s.read_all_db()}
-    #     s.sub_config = s.configs[s.root]
-    #     s.cursor = list(s.configs.keys())
-    #     print("self.cursor", s.cursor)
 
     def get_sub_config(s):
         s.sub_config = s.configs[s.root]
         if len(s.cursor) <= 1:
             return
         for key in s.cursor[1:]:
-            print("Check key:", key)
+           # print("Check key:", key)
             s.sub_config = s.sub_config[key]
 
     def enter_name(self):
@@ -70,7 +63,8 @@ class ConfigMan(BDB):
             "U": {"cmd": self.update_name, "descr": "Update template name and add template part to fill"},
             "T": {"cmd": self.add_templ, "descr": "Create from Template"},
             "C": {"cmd": self.select_type, "descr": "Create from Clear structure"},
-            "B": {"cmd": self.back, "descr": "Back to previous menu"},
+            "B": {"cmd": self.update_name, "descr": "Back to previous menu"},
+
         }
 
         create_menu = DynMenu(f"MENU - Creating new {parent}")
@@ -79,8 +73,6 @@ class ConfigMan(BDB):
         create_menu.activate()["cmd"]()
         return
 
-    def get_file(self):
-        pass
 
     def add_templ(s):
         curs, sub_conf = s.cursor, s.sub_config
@@ -117,8 +109,21 @@ class ConfigMan(BDB):
         type_menu.add_obj(type_menu_keys)
         return type_menu.activate()["cmd"]
 
-    def delete(self, key):
-        pass
+    def delete(s):
+        curs = s.cursor
+        print("!!!Deleting config element with all inside structure and data :", curs[1])
+        s.show()
+        if not yes_or_no(f"Do you want to delete : {curs[-1]} !!!???"):
+            return
+        elem = curs.pop()
+        s.get_sub_config()
+        del s.sub_config[elem]
+
+        if len(curs) == 1:
+            s.delete_db(elem)
+        else:
+            s.save_active_config()
+
 
     def fill(self):
         pass
@@ -138,11 +143,12 @@ class ConfigMan(BDB):
 
     def menu(s):
         curs, sub_conf = s.cursor, s.sub_config
+        print(sub_conf)
         s.main_menu.name = f"{curs[-1]} {' ' * 20} {sub_conf}"
         act_keys = {"C": {"cmd": s.create, "descr": f"Create new object in {curs[-1]} "},
                     "T": {"cmd": s.add_templ, "descr": f"Add new template for config: {curs[-1]}", "hide": True},
                     "F": {"cmd": s.fill, "descr": "Fill one"},
-                    "D": {"cmd": s.delete, "descr": "Delete one"},
+                    "D": {"cmd": s.delete, "descr": "Delete one"},#TODO
                     "S": {"cmd": s.show, "descr": "Show object"},
                     "B": {"cmd": s.back, "descr": f"Back to "},
                     "E": {"cmd": s.exit, "descr": "Exit program"}
@@ -167,14 +173,16 @@ class ConfigMan(BDB):
         if isinstance(sub_conf, dict):
             num = 1
             for key, config in sub_conf.items():
+                if not (isinstance(config, list) or isinstance(config, dict)):
+                    continue
                 addition_menu[str(num)] = {"descr": key}
                 num += 1
 
         if isinstance(sub_conf, list):
-            num = 1
             for idx, config in enumerate(sub_conf):
+                if not (isinstance(config, list) or isinstance(config, dict)):
+                    continue
                 addition_menu[idx] = {"descr": config}
-                num += 1
 
         s.main_menu.add_obj(addition_menu)
         select = s.main_menu.activate()
@@ -182,16 +190,14 @@ class ConfigMan(BDB):
         if "cmd" in select and callable(select["cmd"]):
             select["cmd"]()
         else:
-            print("select", select)
             if isinstance(sub_conf, dict):
                 s.cursor.append(select['descr'])
             if isinstance(sub_conf, list):
                 s.cursor.append(int(select['key']))
 
-            print("cursor::;", s.cursor)
-
         s.main_menu.clear()
         s.get_sub_config()
+        print(s.get_sub_config())
         return s.menu()
 
     def __delete__(self, instance):
