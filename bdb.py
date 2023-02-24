@@ -34,7 +34,6 @@ class BDB:
     @staticmethod
     def to_bin(obj):
         if not isinstance(obj, str):
-        #if isinstance(obj, dict) or isinstance(obj, list) or isinstance(obj, int):
             obj = json.dumps(obj)
         return obj.encode()
 
