@@ -48,6 +48,7 @@ class DynMenu:
             self.active_positions[str(key)] = val
             print(f"[ {key} ] - {val['descr'] if 'descr' in val else ''}")
 
+
 if __name__ == '__main__':
     act_keys = {
         "C": {"cmd": "create", "descr": "Create new"},
