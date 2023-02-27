@@ -46,7 +46,9 @@ class DynMenu:
             if "hide" in val and val["hide"]:
                 continue
             self.active_positions[str(key)] = val
-            print(f"[ {key} ] - {val['descr'] if 'descr' in val else ''}")
+            descr = str(val['descr']) if 'descr' in val else ''
+            content = ": " + str(val['content']) if 'content' in val else ''
+            print(f"[ {key} ] -{'':2s} {descr:20s}{content}")
 
 
 if __name__ == '__main__':
