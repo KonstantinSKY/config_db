@@ -9,6 +9,9 @@ from rich import print_json
 import readline
 
 class ConfigMan(BDB):
+# Todo Clone
+# TODO Fill
+#TODO refactor
 
     def __init__(s, file_name):
         super().__init__(file_name)
