@@ -1,10 +1,12 @@
+import rich
 from berkeleydb import db
 import json, os
 from helpers import yes_or_no
 import importlib
 from bdb import BDB
 from dyn_menu import DynMenu
-
+from rich import print_json
+import readline
 
 class ConfigMan(BDB):
 
@@ -98,7 +100,7 @@ class ConfigMan(BDB):
         type_menu_keys = {
             "D": {"cmd": {}, "descr": "{dict} - Dictionary or hash"},
             "L": {"cmd": [], "descr": "[list -  List or array"},
-            "S": {"cmd": "", "descr": "{dict} - String"},
+            "S": {"cmd": "", "descr": '"str" - String'},
             "I": {"cmd": int(), "descr": "int() = 0 - Integer number"},
             "F": {"cmd": float(), "descr": "float() = 0.0 - Float number"},
             "N": {"cmd": None, "descr": "None"},
@@ -130,7 +132,8 @@ class ConfigMan(BDB):
 
     def show(self):
         print("Element", self.cursor[-1], "structure:")
-        print(self.cursor[-1], " = ", json.dumps(self.sub_config, indent=2))
+        print(self.cursor[-1], ":")
+        rich.print_json(json.dumps(self.sub_config))
 
     def back(self):
         self.cursor.pop()
@@ -141,6 +144,45 @@ class ConfigMan(BDB):
         self.DB.close()
         exit()
 
+    @staticmethod
+    def rlinput(prompt, prefill=''):
+        readline.set_startup_hook(lambda: readline.insert_text(prefill))
+        try:
+            return input(prompt)
+        finally:
+            readline.set_startup_hook()
+
+    @staticmethod
+    def is_json(obj):
+        try:
+            obj = json.loads(obj)
+        except ValueError:
+            print(obj, "is not json")
+        return obj
+
+
+    def edit(self):
+        print("Editing object :", self.cursor[-1])
+        curr = self.cursor[-1]
+        print("Edit object and push enter \n")
+        new_obj = self.rlinput("", json.dumps(self.sub_config))
+        new_obj = self.is_json(new_obj)
+        print(new_obj)
+        if not yes_or_no("Do you want to add this changes to D"):
+            return self.edit() if not yes_or_no("Do you to cancel this edition?") else None
+
+        self.cursor.pop()
+        self.get_sub_config()
+        self.sub_config[curr] = new_obj
+        self.cursor.append(curr)
+
+        self.get_sub_config()
+        print(self.sub_config)
+        print(self.configs)
+
+        self.save_active_config()
+        print(new_obj)
+
     def menu(s):
         curs, sub_conf = s.cursor, s.sub_config
         print(sub_conf)
@@ -148,10 +190,11 @@ class ConfigMan(BDB):
         act_keys = {"C": {"cmd": s.create, "descr": f"Create new object in {curs[-1]} "},
                     "T": {"cmd": s.add_templ, "descr": f"Add new template for config: {curs[-1]}", "hide": True},
                     "F": {"cmd": s.fill, "descr": "Fill one"},
-                    "D": {"cmd": s.delete, "descr": "Delete one"},#TODO
+                    "E": {"cmd": s.edit, "descr": "Edit object"},
+                    "D": {"cmd": s.delete, "descr": "Delete one"},
                     "S": {"cmd": s.show, "descr": "Show object"},
                     "B": {"cmd": s.back, "descr": f"Back to "},
-                    "E": {"cmd": s.exit, "descr": "Exit program"}
+                    "Q": {"cmd": s.exit, "descr": "Exit program"}
                     }
         for key, val in act_keys.items():
             if (key == "B" or key == "D") and len(curs) <= 1:
@@ -173,9 +216,10 @@ class ConfigMan(BDB):
         if isinstance(sub_conf, dict):
             num = 1
             for key, config in sub_conf.items():
+                print(config)
                 if not (isinstance(config, list) or isinstance(config, dict)):
                     continue
-                addition_menu[str(num)] = {"descr": key}
+                addition_menu[str(num)] = {"descr": key, "content": config}
                 num += 1
 
         if isinstance(sub_conf, list):
